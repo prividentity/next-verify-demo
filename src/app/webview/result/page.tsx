@@ -49,11 +49,11 @@ function WebViewResultContent() {
 
     if (data.status === 'SUCCESS' && data.webhookData?.puid) {
       newParams.set('status', 'success');
-      newParams.set('puid', data.webhookData.puid);
-      console.log('[WebViewResult] ✅ Adding PUID to URL:', data.webhookData.puid);
+      newParams.set('uuid', data.webhookData.puid);
+      console.log('[WebViewResult] ✅ Adding UUID to URL:', data.webhookData.puid);
 
-      // Send PUID to native via mauiBridge
-      console.log('[WebViewResult] 📤 Sending PUID to native via mauiBridge');
+      // Send UUID to native via mauiBridge
+      console.log('[WebViewResult] 📤 Sending UUID to native via mauiBridge');
       sendToMaui({
         type: 'uuid',
         message: data.webhookData.puid,

@@ -68,7 +68,7 @@ export default function ResultDisplay({ sessionData }: ResultDisplayProps) {
             <div className="text-right text-xs font-mono opacity-90 space-y-1">
               {webhookData.puid && (
                 <div>
-                  <div className="text-[10px] opacity-75 mb-0.5">PUID</div>
+                  <div className="text-[10px] opacity-75 mb-0.5">UUID</div>
                   <div className="font-medium">{webhookData.puid}</div>
                 </div>
               )}

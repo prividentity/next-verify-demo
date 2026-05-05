@@ -129,23 +129,23 @@ function RedirectResultContent() {
       return;
     }
 
-    // Check if we've already added PUID to URL
-    if (searchParams.get('puid') || searchParams.get('status')) {
-      console.log('[RedirectResult] ℹ️  PUID/status already in URL, skipping');
+    // Check if we've already added UUID to URL
+    if (searchParams.get('uuid') || searchParams.get('status')) {
+      console.log('[RedirectResult] ℹ️  UUID/status already in URL, skipping');
       return;
     }
 
-    // All conditions met! Add PUID or status to URL
-    const puid = sessionData.webhookData.puid;
+    // All conditions met! Add UUID or status to URL
+    const uuid = sessionData.webhookData.puid;
     const errorMessage = status === 'FAILED'
       ? sessionData.webhookData?.message || sessionData.webhookData?.errors?.[0]?.message
       : undefined;
 
     console.log('═══════════════════════════════════════════════════════════');
-    console.log('✅ ADDING PUID TO URL - WEBVIEW READY TO CLOSE');
+    console.log('✅ ADDING UUID TO URL - WEBVIEW READY TO CLOSE');
     console.log('═══════════════════════════════════════════════════════════');
     console.log('Verification Status:', status);
-    console.log('PUID:', puid || 'N/A');
+    console.log('UUID:', uuid || 'N/A');
     console.log('Reason from URL:', reason);
     if (errorMessage) {
       console.log('Error Message:', errorMessage);
@@ -156,10 +156,10 @@ function RedirectResultContent() {
     // Update URL with status and result data
     const newParams = new URLSearchParams(searchParams.toString());
 
-    if (status === 'SUCCESS' && puid) {
+    if (status === 'SUCCESS' && uuid) {
       newParams.set('status', 'success');
-      newParams.set('puid', puid);
-      console.log('📝 Adding status=success and puid to URL:', puid);
+      newParams.set('uuid', uuid);
+      console.log('📝 Adding status=success and uuid to URL:', uuid);
     } else if (status === 'FAILED') {
       newParams.set('status', 'failed');
       if (errorMessage) {
