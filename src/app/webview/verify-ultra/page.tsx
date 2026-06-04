@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 export default function WebViewVerifyUltra() {
   const searchParams = useSearchParams();
   const [customerId, setCustomerId] = useState(
-    searchParams.get('customerId') || 'shiven-11111'
+    searchParams.get('customerId') || ''
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
