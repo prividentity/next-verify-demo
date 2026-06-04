@@ -9,6 +9,23 @@ export default function RedirectFlow() {
   const [error, setError] = useState<string | null>(null);
   const [requireFace, setRequireFace] = useState(true);
   const [requireDocument, setRequireDocument] = useState(false);
+  const [customerId, setCustomerId] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [apiBaseUrl, setApiBaseUrl] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
+  const [callbackUrl, setCallbackUrl] = useState('');
+  const [redirectUrl, setRedirectUrl] = useState('');
+  const [launchUrlHost, setLaunchUrlHost] = useState('');
+
+  // Initialize URLs from window.location.origin on mount
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      setBaseUrl(origin);
+      setCallbackUrl(`${origin}/api/webhook`);
+      setRedirectUrl(origin);
+    }
+  });
 
   const startVerification = async (sessionType: SessionType) => {
     setLoading(true);
@@ -22,9 +39,6 @@ export default function RedirectFlow() {
 
       console.log('[RedirectFlow] Starting verification:', sessionType, 'with requirements:', requirements);
 
-      // Get current hostname for webhook URL
-      const baseUrl = window.location.origin;
-
       // Call API to create session
       const response = await fetch('/api/sessions', {
         method: 'POST',
@@ -34,8 +48,14 @@ export default function RedirectFlow() {
         body: JSON.stringify({
           sessionType,
           flowType: 'redirect',
-          baseUrl, // Send current hostname for webhook URL
-          requirements, // Send selected requirements
+          baseUrl,
+          requirements,
+          customerId: sessionType === 'VERIFY_ULTRA' || sessionType === 'ENROLL' ? customerId : undefined,
+          apiKey,
+          apiBaseUrl,
+          callbackUrl,
+          redirectUrl,
+          launchUrlHost,
         }),
       });
 
@@ -99,6 +119,119 @@ export default function RedirectFlow() {
             </p>
           </div>
         )}
+
+        {/* API Configuration */}
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h3 className="font-semibold text-lg mb-4 text-gray-900 dark:text-gray-100">
+            API Configuration
+          </h3>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                API Key
+              </label>
+              <input
+                id="apiKey"
+                type="text"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+                placeholder="Enter API key"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="apiBaseUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                API Base URL
+              </label>
+              <input
+                id="apiBaseUrl"
+                type="text"
+                value={apiBaseUrl}
+                onChange={(e) => setApiBaseUrl(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+                placeholder="https://api-orchestration.uat.privateid.com/v2"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="callbackUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Callback URL (Webhook)
+              </label>
+              <input
+                id="callbackUrl"
+                type="text"
+                value={callbackUrl}
+                onChange={(e) => setCallbackUrl(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+                placeholder="https://yourapp.com/api/webhook"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="redirectUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Redirect URL (After Completion)
+              </label>
+              <input
+                id="redirectUrl"
+                type="text"
+                value={redirectUrl}
+                onChange={(e) => setRedirectUrl(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+                placeholder="https://yourapp.com"
+              />
+              <button
+                onClick={() => setRedirectUrl(callbackUrl.replace('/api/webhook', ''))}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Copy from callback URL
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="launchUrlHost" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Launch URL Host (Override)
+              </label>
+              <input
+                id="launchUrlHost"
+                type="text"
+                value={launchUrlHost}
+                onChange={(e) => setLaunchUrlHost(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+                placeholder="devel-verify.localhost:3000"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Replace the PrivateID launch URL host with this custom host
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Customer ID */}
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h3 className="font-semibold text-lg mb-4 text-gray-900 dark:text-gray-100">
+            Customer ID
+          </h3>
+          <div className="space-y-2">
+            <label
+              htmlFor="customerId"
+              className="block text-sm text-gray-700 dark:text-gray-300"
+            >
+              Customer ID (required for VERIFY_ULTRA, optional for ENROLL)
+            </label>
+            <input
+              id="customerId"
+              type="text"
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Enter customer ID"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              For VERIFY_ULTRA: Must match a previously enrolled user
+            </p>
+          </div>
+        </div>
 
         {/* Verification Requirements */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
@@ -183,6 +316,38 @@ export default function RedirectFlow() {
             </p>
             <div className="text-blue-600 dark:text-blue-400 font-medium">
               {loading ? 'Creating session...' : 'Start Verify →'}
+            </div>
+          </button>
+
+          <button
+            onClick={() => startVerification('VERIFY_ULTRA')}
+            disabled={loading}
+            className="border border-gray-300 dark:border-gray-600 rounded-lg p-8 hover:shadow-lg transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <h3 className="text-2xl font-semibold mb-3 text-gray-900 dark:text-gray-100">
+              {loading ? 'Loading...' : 'Start Ultra Verify'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Ultra-level verification for existing users with enhanced security.
+            </p>
+            <div className="text-purple-600 dark:text-purple-400 font-medium">
+              {loading ? 'Creating session...' : 'Start Ultra Verify →'}
+            </div>
+          </button>
+
+          <button
+            onClick={() => startVerification('AGE')}
+            disabled={loading}
+            className="border border-gray-300 dark:border-gray-600 rounded-lg p-8 hover:shadow-lg transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <h3 className="text-2xl font-semibold mb-3 text-gray-900 dark:text-gray-100">
+              {loading ? 'Loading...' : 'Start Age Verification'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Verify user age with document and facial age estimation.
+            </p>
+            <div className="text-green-600 dark:text-green-400 font-medium">
+              {loading ? 'Creating session...' : 'Start Age Verification →'}
             </div>
           </button>
         </div>

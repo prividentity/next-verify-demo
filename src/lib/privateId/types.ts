@@ -1,5 +1,5 @@
 // PrivateID API Types
-export type SessionType = "ENROLL" | "VERIFY";
+export type SessionType = "ENROLL" | "VERIFY" | "VERIFY_ULTRA" | "AGE";
 export type FlowType = "redirect" | "iframe";
 export type SessionStatus = "PENDING" | "IN_PROGRESS" | "SUCCESS" | "FAILED";
 
@@ -16,6 +16,23 @@ export interface CreateSessionRequest {
   enableDesktop?: boolean;
   sendImages?: boolean;
   sendEventWebhooks?: boolean;
+  requirements?: string[];
+}
+
+// Request payload for creating an Age verification session
+export interface CreateAgeSessionRequest {
+  ageThreshold?: number;
+  redirectUrl: string;
+  livenessEnabled?: boolean;
+  enableSwitchDevice?: boolean;
+  locale?: string;
+  enableDesktop?: boolean;
+  metadata?: Record<string, any>;
+  compareThreshold?: number;
+  documentAgeReturnFormat?: 'both' | 'document' | 'facial' | 'none';
+  facialAgeEstimationReturnFormat?: 'both' | 'document' | 'facial' | 'none';
+  faceMatchThreshold?: number;
+  documentAgeThreshold?: number;
   requirements?: string[];
 }
 
