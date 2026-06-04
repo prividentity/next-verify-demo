@@ -3,7 +3,13 @@ import { randomUUID } from 'crypto';
 import { privateIdClient } from '@/lib/privateId/client';
 import { sessionStore } from '@/lib/session/store';
 import { PRIVATEID_CONFIG } from '@/lib/privateId/config';
-import type { SessionType, FlowType, SessionData } from '@/lib/privateId/types';
+import type {
+  SessionType,
+  FlowType,
+  SessionData,
+  CreateSessionRequest,
+  CreateSessionResponse,
+} from '@/lib/privateId/types';
 
 export async function POST(request: NextRequest) {
   try {
