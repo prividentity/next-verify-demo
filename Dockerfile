@@ -8,6 +8,10 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG PRIVATEID_API_KEY="0000000000000000test"
+ARG PRIVATEID_API_BASE="https://api-orchestration.uat.privateid.com/v2"
+ENV PRIVATEID_API_KEY=$PRIVATEID_API_KEY
+ENV PRIVATEID_API_BASE=$PRIVATEID_API_BASE
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
