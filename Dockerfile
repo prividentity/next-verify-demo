@@ -14,6 +14,7 @@ ENV PRIVATEID_API_KEY=$PRIVATEID_API_KEY
 ENV PRIVATEID_API_BASE=$PRIVATEID_API_BASE
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build && npm prune --production
+RUN mkdir -p public
 
 FROM node:20-alpine AS runner
 WORKDIR /app
