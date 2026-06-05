@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function WebViewVerifyUltra() {
+function WebViewVerifyUltraContent() {
   const searchParams = useSearchParams();
   const [customerId, setCustomerId] = useState(
     searchParams.get('customerId') || ''
@@ -113,5 +113,19 @@ export default function WebViewVerifyUltra() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function WebViewVerifyUltra() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600" />
+        </div>
+      }
+    >
+      <WebViewVerifyUltraContent />
+    </Suspense>
   );
 }

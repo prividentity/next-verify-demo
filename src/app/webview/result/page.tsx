@@ -165,7 +165,7 @@ function WebViewResultContent() {
                 </svg>
                 <p className="text-xl font-semibold">Verification Failed</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  {sessionData.webhookData?.message || 'Please try again'}
+                  {sessionData?.webhookData?.message || 'Please try again'}
                 </p>
               </div>
             )}
