@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       redirectUrl: requestRedirectUrl,
       launchUrlHost: requestLaunchUrlHost,
       sendImages: requestSendImages,
+      facialAgeEstimationReturnFormat: requestFacialAgeEstimationReturnFormat,
     } = body as {
       sessionType: SessionType;
       flowType: FlowType;
@@ -34,10 +35,13 @@ export async function POST(request: NextRequest) {
       redirectUrl?: string;
       launchUrlHost?: string;
       sendImages?: boolean;
+      facialAgeEstimationReturnFormat?: 'threshold' | 'exact' | 'both' | 'none';
     };
 
     // Default to true to preserve previous behavior when the client doesn't specify
     const effectiveSendImages = requestSendImages ?? true;
+    // Default to 'both' so the estimated age is returned alongside the threshold result
+    const effectiveFacialAgeEstimationReturnFormat = requestFacialAgeEstimationReturnFormat ?? 'both';
     console.log({body});
     // Validate input
     if (!sessionType || !['ENROLL', 'VERIFY', 'VERIFY_ULTRA', 'AGE'].includes(sessionType)) {
@@ -130,7 +134,8 @@ export async function POST(request: NextRequest) {
           customerId: effectiveCustomerId,
         },
         requestLaunchUrlHost,
-        effectiveSendImages
+        effectiveSendImages,
+        effectiveFacialAgeEstimationReturnFormat
       );
     } else {
       // Use standard verification session endpoint for ENROLL, VERIFY, and VERIFY_ULTRA
@@ -162,6 +167,8 @@ export async function POST(request: NextRequest) {
       flowType,
       createdAt: new Date(),
       updatedAt: new Date(),
+      apiBaseUrl: effectiveApiBaseUrl,
+      apiKey: effectiveApiKey,
     };
 
     sessionStore.create(sessionData);
@@ -270,11 +277,26 @@ async function createSessionDirect(
     }
   }
 
+  // The Age /session endpoint returns its session ID under `token`, which is the
+  // ID that /session/:id/result expects — NOT the `sessionId` query param in the
+  // launch URL (a different, unrelated ID). `data.token` is undefined for the
+  // standard verification-session response, so it harmlessly falls through there.
   return {
-    sessionId: data.sessionId,
+    sessionId: data.token || data.sessionId || extractSessionIdFromUrl(originalUrl),
     verificationUrl: modifiedUrl,
     expiresAt: data.expiresAt,
   };
+}
+
+// Extract PrivateID's sessionId from the launch URL query param when the
+// API response doesn't include a top-level sessionId field (e.g. Age flow)
+function extractSessionIdFromUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  try {
+    return new URL(url).searchParams.get('sessionId') || undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 // Helper function to create Age session with custom API config
@@ -285,7 +307,8 @@ async function createAgeSessionDirect(
   requirements?: string[],
   metadata?: Record<string, any>,
   launchUrlHost?: string,
-  sendImages: boolean = true
+  sendImages: boolean = true,
+  facialAgeEstimationReturnFormat: 'threshold' | 'exact' | 'both' | 'none' = 'both'
 ): Promise<CreateSessionResponse> {
   const payload = {
     ageThreshold: 0.01,
@@ -297,7 +320,7 @@ async function createAgeSessionDirect(
     metadata: metadata || {},
     compareThreshold: 0.2,
     documentAgeReturnFormat: 'both',
-    facialAgeEstimationReturnFormat: 'none',
+    facialAgeEstimationReturnFormat,
     faceMatchThreshold: 0.2,
     documentAgeThreshold: 0.01,
     sendImages,
@@ -341,8 +364,12 @@ async function createAgeSessionDirect(
     }
   }
 
+  // The Age /session endpoint returns its session ID under `token`, which is the
+  // ID that /session/:id/result expects — NOT the `sessionId` query param in the
+  // launch URL (a different, unrelated ID). `data.token` is undefined for the
+  // standard verification-session response, so it harmlessly falls through there.
   return {
-    sessionId: data.sessionId,
+    sessionId: data.token || data.sessionId || extractSessionIdFromUrl(originalUrl),
     verificationUrl: modifiedUrl,
     expiresAt: data.expiresAt,
   };

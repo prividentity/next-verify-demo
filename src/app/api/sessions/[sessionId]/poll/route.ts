@@ -46,13 +46,20 @@ export async function POST(
     console.log('[API /sessions/:id/poll] Fetching webhook data from PrivateID...');
 
     // Fetch webhook data directly from PrivateID
-    const webhookData = await privateIdClient.fetchWebhookData(session.privateIdSessionId);
+    const webhookData = await privateIdClient.fetchWebhookData(
+      session.privateIdSessionId,
+      session.sessionType,
+      { apiBase: session.apiBaseUrl, apiKey: session.apiKey }
+    );
 
-    // Determine session status from webhook data
+    // Determine session status from webhook data.
+    // The verification-session webhook uses `status`; the Age /session/:id/result
+    // endpoint uses `flowStatus` (e.g. "COMPLETED").
     let sessionStatus: 'SUCCESS' | 'FAILED' | 'IN_PROGRESS' = 'IN_PROGRESS';
 
-    if (webhookData.status) {
-      const normalizedStatus = webhookData.status.toUpperCase();
+    const rawStatus = webhookData.status || webhookData.flowStatus;
+    if (rawStatus) {
+      const normalizedStatus = String(rawStatus).toUpperCase();
       if (normalizedStatus === 'SUCCESS' || normalizedStatus === 'COMPLETED') {
         sessionStatus = 'SUCCESS';
       } else if (normalizedStatus === 'FAILED' || normalizedStatus === 'ERROR' || normalizedStatus === 'FAILURE') {

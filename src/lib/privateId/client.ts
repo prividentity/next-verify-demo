@@ -144,7 +144,7 @@ export class PrivateIdClient {
       metadata: options?.metadata ?? {},
       compareThreshold: options?.compareThreshold ?? 0.2,
       documentAgeReturnFormat: options?.documentAgeReturnFormat ?? 'both',
-      facialAgeEstimationReturnFormat: options?.facialAgeEstimationReturnFormat ?? 'none',
+      facialAgeEstimationReturnFormat: options?.facialAgeEstimationReturnFormat ?? 'both',
       faceMatchThreshold: options?.faceMatchThreshold ?? 0.2,
       documentAgeThreshold: options?.documentAgeThreshold ?? 0.01,
       requirements: options?.requirements ?? ['face'],
@@ -227,18 +227,32 @@ export class PrivateIdClient {
    * Fetch webhook data directly from PrivateID
    * Useful as a fallback if webhook POST is delayed or fails
    */
-  async fetchWebhookData(privateIdSessionId: string): Promise<any> {
+  async fetchWebhookData(
+    privateIdSessionId: string,
+    sessionType?: SessionType,
+    overrides?: { apiBase?: string; apiKey?: string }
+  ): Promise<any> {
     try {
-      const response = await fetch(
-        `${this.apiBase}/verification-session/${privateIdSessionId}/webhook`,
-        {
-          method: 'GET',
-          headers: {
-            'x_api_key': this.apiKey,
-            'Accept': 'application/json',
-          },
-        }
-      );
+      // Use the API base/key the session was created with, so polling targets the
+      // same PrivateID environment rather than the client's env-based defaults.
+      const apiBase = overrides?.apiBase || this.apiBase;
+      const apiKey = overrides?.apiKey || this.apiKey;
+
+      // AGE sessions are created via the /session endpoint and expose their
+      // result at /session/:id/result. All other session types use the
+      // verification-session webhook endpoint.
+      const url =
+        sessionType === 'AGE'
+          ? `${apiBase}/session/${privateIdSessionId}/result`
+          : `${apiBase}/verification-session/${privateIdSessionId}/webhook`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'x-api-key': apiKey,
+          'Accept': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         const errorText = await response.text();

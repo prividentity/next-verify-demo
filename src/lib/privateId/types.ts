@@ -30,7 +30,7 @@ export interface CreateAgeSessionRequest {
   metadata?: Record<string, any>;
   compareThreshold?: number;
   documentAgeReturnFormat?: 'both' | 'document' | 'facial' | 'none';
-  facialAgeEstimationReturnFormat?: 'both' | 'document' | 'facial' | 'none';
+  facialAgeEstimationReturnFormat?: 'threshold' | 'exact' | 'both' | 'none';
   faceMatchThreshold?: number;
   documentAgeThreshold?: number;
   sendImages?: boolean;
@@ -83,6 +83,10 @@ export interface SessionData {
   createdAt: Date;
   updatedAt: Date;
   webhookData?: WebhookPayload;
+  // The API base/key used to create this session, so polling targets the same
+  // PrivateID environment instead of the singleton client's env-based defaults.
+  apiBaseUrl?: string;
+  apiKey?: string;
 }
 
 // API error response

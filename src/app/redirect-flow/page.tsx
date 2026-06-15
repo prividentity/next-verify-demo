@@ -10,6 +10,8 @@ export default function RedirectFlow() {
   const [requireFace, setRequireFace] = useState(true);
   const [requireDocument, setRequireDocument] = useState(false);
   const [sendImages, setSendImages] = useState(true);
+  const [facialAgeEstimationReturnFormat, setFacialAgeEstimationReturnFormat] =
+    useState<'threshold' | 'exact' | 'both' | 'none'>('both');
   const [customerId, setCustomerId] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiBaseUrl, setApiBaseUrl] = useState('');
@@ -55,6 +57,7 @@ export default function RedirectFlow() {
           redirectUrl,
           launchUrlHost,
           sendImages,
+          facialAgeEstimationReturnFormat,
         }),
       });
 
@@ -288,6 +291,36 @@ export default function RedirectFlow() {
                 </p>
               </div>
             </label>
+
+            <div className="space-y-2 pt-2">
+              <label
+                htmlFor="facialAgeEstimationReturnFormat"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Facial Age Estimation Return Format
+                <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                  (Age flow only)
+                </span>
+              </label>
+              <select
+                id="facialAgeEstimationReturnFormat"
+                value={facialAgeEstimationReturnFormat}
+                onChange={(e) =>
+                  setFacialAgeEstimationReturnFormat(
+                    e.target.value as 'threshold' | 'exact' | 'both' | 'none'
+                  )
+                }
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="both">Both (threshold + exact age)</option>
+                <option value="exact">Exact age</option>
+                <option value="threshold">Threshold only</option>
+                <option value="none">None</option>
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Controls whether the estimated age is returned for the Age verification flow.
+              </p>
+            </div>
           </div>
 
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
