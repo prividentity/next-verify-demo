@@ -17,6 +17,20 @@ export async function POST(request: NextRequest) {
       timestamp: payload.timestamp,
     });
 
+    // Print the full results being sent from the webhook.
+    // Image fields can be large base64 strings, so summarize them instead of dumping raw data.
+    console.log('[API /webhook] Full webhook payload:');
+    console.log(
+      JSON.stringify(
+        payload,
+        (key, value) =>
+          typeof value === 'string' && value.length > 200
+            ? `<${value.length} chars${value.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(value.slice(0, 64)) ? ', likely image/base64' : ''}>`
+            : value,
+        2
+      )
+    );
+
     // Validate payload has session ID
     if (!payload.sessionId) {
       console.error('[API /webhook] Missing sessionId in webhook payload');

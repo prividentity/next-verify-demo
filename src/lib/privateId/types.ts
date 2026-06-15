@@ -33,6 +33,7 @@ export interface CreateAgeSessionRequest {
   facialAgeEstimationReturnFormat?: 'both' | 'document' | 'facial' | 'none';
   faceMatchThreshold?: number;
   documentAgeThreshold?: number;
+  sendImages?: boolean;
   requirements?: string[];
 }
 

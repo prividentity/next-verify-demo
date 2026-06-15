@@ -8,6 +8,51 @@ interface ResultDisplayProps {
   sessionData: SessionData;
 }
 
+interface FoundImage {
+  label: string;
+  src: string;
+}
+
+// Recursively scan the webhook payload for image-like values so we can display
+// whatever images PrivateID returns when `sendImages` is enabled, regardless of
+// the exact field names used in the payload.
+function collectImages(value: unknown, path = ''): FoundImage[] {
+  if (value == null) return [];
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    const label = path || 'image';
+
+    // Already a data URI
+    if (/^data:image\/[a-z0-9.+-]+;base64,/i.test(trimmed)) {
+      return [{ label, src: trimmed }];
+    }
+    // Image URL
+    if (/^https?:\/\/.+\.(png|jpe?g|gif|webp|bmp)(\?.*)?$/i.test(trimmed)) {
+      return [{ label, src: trimmed }];
+    }
+    // Raw base64 (heuristic: long, base64 charset, and the key hints at an image)
+    const looksBase64 = trimmed.length > 256 && /^[A-Za-z0-9+/=\s]+$/.test(trimmed);
+    const keyHintsImage = /image|img|photo|portrait|selfie|face|document|doc|front|back|scan/i.test(path);
+    if (looksBase64 && keyHintsImage) {
+      return [{ label, src: `data:image/jpeg;base64,${trimmed.replace(/\s+/g, '')}` }];
+    }
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item, i) => collectImages(item, `${path}[${i}]`));
+  }
+
+  if (typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>).flatMap(([key, v]) =>
+      collectImages(v, path ? `${path}.${key}` : key)
+    );
+  }
+
+  return [];
+}
+
 export default function ResultDisplay({ sessionData }: ResultDisplayProps) {
   const [showRawJson, setShowRawJson] = useState(false);
 
@@ -43,6 +88,7 @@ export default function ResultDisplay({ sessionData }: ResultDisplayProps) {
   const contactInfo = webhookData?.contactInformation;
   const deviceInfo = webhookData?.deviceInfo;
   const indicators = webhookData?.indicators;
+  const images = webhookData ? collectImages(webhookData) : [];
 
   return (
     <div className="space-y-6">
@@ -113,6 +159,34 @@ export default function ResultDisplay({ sessionData }: ResultDisplayProps) {
                     )}
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Captured Images (shown when the session was created with Send Images enabled) */}
+      {images.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold text-lg mb-4 text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <span className="text-xl">🖼️</span>
+            Captured Images
+            <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+              ({images.length})
+            </span>
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {images.map((img, index) => (
+              <div key={`${img.label}-${index}`} className="space-y-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={img.src}
+                  alt={img.label}
+                  className="w-full h-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 object-contain"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-mono break-all">
+                  {img.label}
+                </p>
               </div>
             ))}
           </div>

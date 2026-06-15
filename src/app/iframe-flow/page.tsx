@@ -21,15 +21,12 @@ export default function IframeFlow() {
   const [redirectUrl, setRedirectUrl] = useState('');
   const [launchUrlHost, setLaunchUrlHost] = useState('');
 
-  // Initialize URLs from window.location.origin on mount
-  useState(() => {
-    if (typeof window !== 'undefined') {
-      const origin = window.location.origin;
-      setBaseUrl(origin);
-      setCallbackUrl(`${origin}/api/webhook`);
-      setRedirectUrl(origin);
-    }
-  });
+  useEffect(() => {
+    const origin = window.location.origin;
+    setBaseUrl(origin);
+    setCallbackUrl(`${origin}/api/webhook`);
+    setRedirectUrl(origin);
+  }, []);
 
   const startVerification = async (sessionType: SessionType) => {
     setLoading(true);
@@ -67,7 +64,7 @@ export default function IframeFlow() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create session');
+        throw new Error(errorData.message || errorData.error || 'Failed to create session');
       }
 
       const data = await response.json();

@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       callbackUrl: requestCallbackUrl,
       redirectUrl: requestRedirectUrl,
       launchUrlHost: requestLaunchUrlHost,
+      sendImages: requestSendImages,
     } = body as {
       sessionType: SessionType;
       flowType: FlowType;
@@ -32,8 +33,12 @@ export async function POST(request: NextRequest) {
       callbackUrl?: string;
       redirectUrl?: string;
       launchUrlHost?: string;
+      sendImages?: boolean;
     };
 
+    // Default to true to preserve previous behavior when the client doesn't specify
+    const effectiveSendImages = requestSendImages ?? true;
+    console.log({body});
     // Validate input
     if (!sessionType || !['ENROLL', 'VERIFY', 'VERIFY_ULTRA', 'AGE'].includes(sessionType)) {
       return NextResponse.json(
@@ -114,6 +119,7 @@ export async function POST(request: NextRequest) {
     let response;
     if (sessionType === 'AGE') {
       // Use Age-specific API endpoint with custom config
+      console.log({effectiveApiBaseUrl, effectiveApiKey})
       response = await createAgeSessionDirect(
         effectiveApiKey,
         effectiveApiBaseUrl,
@@ -123,7 +129,8 @@ export async function POST(request: NextRequest) {
           sessionId: internalSessionId,
           customerId: effectiveCustomerId,
         },
-        requestLaunchUrlHost
+        requestLaunchUrlHost,
+        effectiveSendImages
       );
     } else {
       // Use standard verification session endpoint for ENROLL, VERIFY, and VERIFY_ULTRA
@@ -135,7 +142,8 @@ export async function POST(request: NextRequest) {
         finalRedirectUrl,
         effectiveCustomerId,
         requirements,
-        requestLaunchUrlHost
+        requestLaunchUrlHost,
+        effectiveSendImages
       );
     }
 
@@ -205,7 +213,8 @@ async function createSessionDirect(
   redirectUrl: string,
   customerId: string,
   requirements?: string[],
-  launchUrlHost?: string
+  launchUrlHost?: string,
+  sendImages: boolean = true
 ): Promise<CreateSessionResponse> {
   const payload: CreateSessionRequest = {
     type: sessionType,
@@ -218,7 +227,7 @@ async function createSessionDirect(
     redirectURL: redirectUrl,
     locale: 'en-US',
     enableDesktop: true,
-    sendImages: true,
+    sendImages,
     sendEventWebhooks: true,
     requirements: requirements || (sessionType === 'ENROLL' ? ['face', 'identity_document'] : ['face']),
     customerId,
@@ -227,7 +236,7 @@ async function createSessionDirect(
   const response = await fetch(`${apiBase}/verification-session`, {
     method: 'POST',
     headers: {
-      'x_api_key': apiKey,
+      'x-api-key': apiKey,
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
@@ -275,7 +284,8 @@ async function createAgeSessionDirect(
   redirectUrl: string,
   requirements?: string[],
   metadata?: Record<string, any>,
-  launchUrlHost?: string
+  launchUrlHost?: string,
+  sendImages: boolean = true
 ): Promise<CreateSessionResponse> {
   const payload = {
     ageThreshold: 0.01,
@@ -290,6 +300,7 @@ async function createAgeSessionDirect(
     facialAgeEstimationReturnFormat: 'none',
     faceMatchThreshold: 0.2,
     documentAgeThreshold: 0.01,
+    sendImages,
     requirements: requirements || ['face'],
   };
 

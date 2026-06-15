@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { SessionType } from '@/lib/privateId/types';
 
@@ -9,6 +9,7 @@ export default function RedirectFlow() {
   const [error, setError] = useState<string | null>(null);
   const [requireFace, setRequireFace] = useState(true);
   const [requireDocument, setRequireDocument] = useState(false);
+  const [sendImages, setSendImages] = useState(true);
   const [customerId, setCustomerId] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiBaseUrl, setApiBaseUrl] = useState('');
@@ -17,15 +18,12 @@ export default function RedirectFlow() {
   const [redirectUrl, setRedirectUrl] = useState('');
   const [launchUrlHost, setLaunchUrlHost] = useState('');
 
-  // Initialize URLs from window.location.origin on mount
-  useState(() => {
-    if (typeof window !== 'undefined') {
-      const origin = window.location.origin;
-      setBaseUrl(origin);
-      setCallbackUrl(`${origin}/api/webhook`);
-      setRedirectUrl(origin);
-    }
-  });
+  useEffect(() => {
+    const origin = window.location.origin;
+    setBaseUrl(origin);
+    setCallbackUrl(`${origin}/api/webhook`);
+    setRedirectUrl(`${origin}/redirect-flow/result`);
+  }, []);
 
   const startVerification = async (sessionType: SessionType) => {
     setLoading(true);
@@ -56,12 +54,13 @@ export default function RedirectFlow() {
           callbackUrl,
           redirectUrl,
           launchUrlHost,
+          sendImages,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create session');
+        throw new Error(errorData.message || errorData.error || 'Failed to create session');
       }
 
       const data = await response.json();
@@ -269,6 +268,23 @@ export default function RedirectFlow() {
                 </span>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Only applicable for ENROLL (driver's license, passport, etc.)
+                </p>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sendImages}
+                onChange={(e) => setSendImages(e.target.checked)}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <div className="flex-1">
+                <span className="font-medium text-gray-900 dark:text-gray-100">
+                  Send Images
+                </span>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Return captured images (face / document) in the webhook payload
                 </p>
               </div>
             </label>
