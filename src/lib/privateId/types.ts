@@ -12,6 +12,7 @@ export interface CreateSessionRequest {
     headers?: Record<string, string>;
   };
   customerId?: string;
+  productGroupId?: string;
   locale?: string;
   enableDesktop?: boolean;
   sendImages?: boolean;

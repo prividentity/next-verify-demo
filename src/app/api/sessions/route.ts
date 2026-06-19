@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
       requirements,
       isWebView,
       customerId,
+      productGroupId,
       apiKey: requestApiKey,
       apiBaseUrl: requestApiBaseUrl,
       callbackUrl: requestCallbackUrl,
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
       requirements?: string[];
       isWebView?: boolean;
       customerId?: string;
+      productGroupId?: string;
       apiKey?: string;
       apiBaseUrl?: string;
       callbackUrl?: string;
@@ -148,7 +150,8 @@ export async function POST(request: NextRequest) {
         effectiveCustomerId,
         requirements,
         requestLaunchUrlHost,
-        effectiveSendImages
+        effectiveSendImages,
+        productGroupId
       );
     }
 
@@ -221,7 +224,8 @@ async function createSessionDirect(
   customerId: string,
   requirements?: string[],
   launchUrlHost?: string,
-  sendImages: boolean = true
+  sendImages: boolean = true,
+  productGroupId?: string
 ): Promise<CreateSessionResponse> {
   const payload: CreateSessionRequest = {
     type: sessionType,
@@ -238,6 +242,7 @@ async function createSessionDirect(
     sendEventWebhooks: true,
     requirements: requirements || (sessionType === 'ENROLL' ? ['face', 'identity_document'] : ['face']),
     customerId,
+    ...(productGroupId ? { productGroupId } : {}),
   };
 
   const response = await fetch(`${apiBase}/verification-session`, {

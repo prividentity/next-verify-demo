@@ -13,6 +13,7 @@ export default function RedirectFlow() {
   const [facialAgeEstimationReturnFormat, setFacialAgeEstimationReturnFormat] =
     useState<'threshold' | 'exact' | 'both' | 'none'>('both');
   const [customerId, setCustomerId] = useState('');
+  const [productGroupId, setProductGroupId] = useState('priflo');
   const [apiKey, setApiKey] = useState('');
   const [apiBaseUrl, setApiBaseUrl] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
@@ -35,7 +36,9 @@ export default function RedirectFlow() {
       // Build requirements array
       const requirements: string[] = [];
       if (requireFace) requirements.push('face');
-      if (sessionType === 'ENROLL' && requireDocument) requirements.push('identity_document');
+      if (sessionType === 'ENROLL' && requireDocument) {
+        requirements.push('identity_document', 'verification');
+      }
 
       console.log('[RedirectFlow] Starting verification:', sessionType, 'with requirements:', requirements);
 
@@ -51,6 +54,7 @@ export default function RedirectFlow() {
           baseUrl,
           requirements,
           customerId: sessionType === 'VERIFY_ULTRA' || sessionType === 'ENROLL' ? customerId : undefined,
+          productGroupId: sessionType === 'ENROLL' && productGroupId ? productGroupId : undefined,
           apiKey,
           apiBaseUrl,
           callbackUrl,
@@ -231,6 +235,26 @@ export default function RedirectFlow() {
             />
             <p className="text-xs text-gray-500 dark:text-gray-400">
               For VERIFY_ULTRA: Must match a previously enrolled user
+            </p>
+          </div>
+
+          <div className="space-y-2 mt-4">
+            <label
+              htmlFor="productGroupId"
+              className="block text-sm text-gray-700 dark:text-gray-300"
+            >
+              Product Group (ENROLL only)
+            </label>
+            <input
+              id="productGroupId"
+              type="text"
+              value={productGroupId}
+              onChange={(e) => setProductGroupId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="priflo"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Product group to associate with the enrollment session. Defaults to "priflo".
             </p>
           </div>
         </div>
